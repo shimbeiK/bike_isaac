@@ -3,46 +3,111 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-from isaaclab_assets.robots.cartpole import CARTPOLE_CFG
+import importlib
+
+# bike_cfg_module = importlib.import_module(
+#     "/home/shin-linux/bike_isaac/source/bike_isaac/bike_isaac/bike_cfg"
+# )
+# BIKE_CFG = bike_cfg_module.BIKE_CFG
+
+from bike_isaac.bike_cfg import BIKE_CFG
 
 from isaaclab.assets import ArticulationCfg
 from isaaclab.envs import DirectRLEnvCfg
 from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.sim import SimulationCfg
 from isaaclab.utils import configclass
+from isaaclab.managers import EventTermCfg as EventTerm
+from isaaclab.managers import SceneEntityCfg
+from isaaclab.utils.noise import GaussianNoiseCfg, NoiseModelWithAdditiveBiasCfg
+import isaaclab.envs.mdp as mdp
 
+@configclass
+class EventCfg:
+    """Configuration for randomization."""
+    # 1. 物理パラメータ：質量・重心・慣性モーメントのランダム化（エピソードリセットごとに再抽選）
+    randomize_rigid_body_mass = EventTerm(
+        func=mdp.randomize_rigid_body_mass,
+        mode="reset", # "startup" から "reset" に変更
+        params={
+            "asset_cfg": SceneEntityCfg("robot", body_names="main_body"),
+            "mass_distribution_params": (0.8, 1.2),
+            "operation": "scale",
+            "distribution": "uniform",
+            "recompute_inertia": True,
+        },
+    )
+
+    # 2. アクチュエータパラメータ（PDゲイン）のランダム化（エピソードリセットごとに再抽選）
+    randomize_actuator_gains = EventTerm(
+        func=mdp.randomize_actuator_gains,
+        mode="reset", # "startup" から "reset" に変更
+        params={
+            "asset_cfg": SceneEntityCfg("robot", joint_names="back_tire_pitch"),
+            "stiffness_distribution_params": (0.8, 1.2),
+            "damping_distribution_params": (0.8, 1.2),
+            "operation": "scale",
+            "distribution": "uniform",
+        },
+    )
+
+    # 3. アクチュエータパラメータ（）のランダム化（エピソードリセットごとに再抽選）
+    randomize_joint_parameters = EventTerm(
+        func=mdp.randomize_joint_parameters,
+        mode="reset", # "startup" から "reset" に変更
+        params={
+            "asset_cfg": SceneEntityCfg("robot", joint_names="back_tire_pitch"),
+            "armature_distribution_params": (0.8, 1.2),
+            # "friction_distribution_params": (0.8, 1.2),
+            # "dynamic_friction_distribution_params": (0.8, 1.2),
+            "operation": "scale",
+            "distribution": "uniform",
+        },
+    )
 
 @configclass
 class BikeIsaacEnvCfg(DirectRLEnvCfg):
     # env
-    decimation = 2
-    episode_length_s = 5.0
-    # - spaces definition
-    action_space = 1
-    observation_space = 4
-    state_space = 0
+    decimation = 1      # rendering frequency with frame
+    episode_length_s = 5.0  # maximum episode length in seconds
+    action_space = 1     # - spaces definition
+    observation_space = 4  # - spaces definition
+    state_space = 0     # 保持すべき内部状態の数
 
-    # simulation
-    sim: SimulationCfg = SimulationCfg(dt=1 / 120, render_interval=decimation)
+    # simulation. recommended is 1/120
+    sim: SimulationCfg = SimulationCfg(dt=1 / 100, render_interval=decimation)
 
     # robot(s)
-    robot_cfg: ArticulationCfg = CARTPOLE_CFG.replace(prim_path="/World/envs/env_.*/Robot")
+    # /World/envs/env_.*/Robot というプリムパスでは、
+    # シーンのすべてのコピーに Robot という名前のロボットが存在することを暗黙的に示しています。
+    robot_cfg: ArticulationCfg = BIKE_CFG.replace(prim_path="/World/envs/env_.*/Robot")
 
     # scene
-    scene: InteractiveSceneCfg = InteractiveSceneCfg(num_envs=4096, env_spacing=4.0, replicate_physics=True)
+    scene: InteractiveSceneCfg = InteractiveSceneCfg(num_envs=2, env_spacing=4.0, replicate_physics=True)
+
+    # events
+    events: EventCfg = EventCfg()
+    action_noise_model: NoiseModelWithAdditiveBiasCfg = NoiseModelWithAdditiveBiasCfg(
+      noise_cfg=GaussianNoiseCfg(mean=0.0, std=0.05, operation="add"),
+      bias_noise_cfg=GaussianNoiseCfg(mean=0.0, std=0.0, operation="abs"),
+    )
 
     # custom parameters/scales
     # - controllable joint
-    cart_dof_name = "slider_to_cart"
-    pole_dof_name = "cart_to_pole"
-    # - action scale
-    action_scale = 100.0  # [N]
+    fork_dof_name = "fork_yaw"
+    back_tire_dof_name = "back_tire_pitch"
+
+    # - action scale. now don't use torque control, so this is not used
+    action_scale = 0.0  # [N]
+
     # - reward scales
-    rew_scale_alive = 1.0
-    rew_scale_terminated = -2.0
-    rew_scale_pole_pos = -1.0
-    rew_scale_cart_vel = -0.01
-    rew_scale_pole_vel = -0.005
+        # reward
+    rew_scale_roll_angle = 1.0
+        # penalty
+    rew_scale_roll_vel = -0.01
+    rew_scale_stable = -0.005
+    rew_scale_terminated = -1.0
+
     # - reset states/conditions
-    initial_pole_angle_range = [-0.25, 0.25]  # pole angle sample range on reset [rad]
-    max_cart_pos = 3.0  # reset if cart exceeds this position [m]
+    initial_roll_angle_range = [-0.25, 0.25]  # roll angle sample range on reset [rad]
+    max_roll_angle = 3.0  # reset if cart exceeds this position [m]

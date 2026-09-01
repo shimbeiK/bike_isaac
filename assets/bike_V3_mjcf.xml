@@ -14,19 +14,19 @@
   </default>
 
   <asset>
-    <mesh name="body" file="body.stl" />
+    <mesh name="main_body" file="body.stl" />
     <mesh name="back_tire" file="back_tire.stl" />
     <mesh name="fork" file="fork.stl" />
     <mesh name="front_tire" file="front_tire.stl" />
   </asset>
 
   <worldbody>
-    <body name="body" pos=".0 .0 .0">
-      <freejoint />
+    
+    <body name="main_body" pos=".0 .0 .0">
       <inertial pos="-251.337e-3 -1.123e-3 310.924e-3" mass="2.3123167" diaginertia="0.06237483005 0.04698001994 0.03020791479" />
-      <!-- <geom class="visual" type="mesh" mesh="body"/> -->
+      <!-- <geom class="visual" type="mesh" mesh="main_body"/> -->
       <!-- <geom type="box" size="0.15 0.05 0.1" pos="0 0 0.15" group="0" /> -->
-      <geom name="body_geom"type="mesh" mesh="body" group="0" />
+      <geom name="main_body_geom" type="mesh" mesh="main_body" group="0" />
       <site name="imu_site" pos="-200.0e-3 0 424.357e-3" size="0.01" rgba="1 0 0 1"/>
 
       <!-- back_tire -->
@@ -39,9 +39,9 @@
 
       <!-- fork -->
       <body name="fork" pos="-492.314e-3 0.0 344.92e-3" quat="0.9785 0 0.20625 0">
-        <joint name="fork_yaw" type="hinge" pos="0 0 0" axis="0 0 -1" limited="false" frictionloss="0.161745" damping=".0"/>
+        <joint name="fork_yaw" type="hinge" pos="0 0 0" axis="0 0 -1" range="-1.570796 1.570796" limited="true" frictionloss="0.161745" damping=".0"/>
         <inertial pos="0 0 -40.874e-3" mass="0.482246" diaginertia="0.004616 0.00451647025 0.000100681436" />
-        <geom name="fork_geom" class="visual" type="mesh" mesh="fork" group="0"/>
+        <geom name="fork_geom" type="mesh" mesh="fork" group="0"/>
 
         <!-- front_tire -->
         <body name="front_tire" pos=".0 .0 -212.269e-3">
@@ -67,8 +67,8 @@
   </actuator>
 
   <contact>
-    <exclude body1="body" body2="back_tire" />
-    <exclude body1="body" body2="fork" />
+    <exclude body1="main_body" body2="back_tire" />
+    <exclude body1="main_body" body2="fork" />
     <exclude body1="fork" body2="front_tire" />
   </contact>
 
