@@ -18,6 +18,8 @@ parser.add_argument(
 )
 parser.add_argument("--num_envs", type=int, default=None, help="Number of environments to simulate.")
 parser.add_argument("--task", type=str, default=None, help="Name of the task.")
+parser.add_argument("--debug", action="store_true", help="Enable debug print messages")
+
 # append AppLauncher cli args
 AppLauncher.add_app_launcher_args(parser)
 # parse the arguments
@@ -46,6 +48,7 @@ def main():
     )
     # create environment
     env = gym.make(args_cli.task, cfg=env_cfg)
+    env_cfg.debug = args_cli.debug
 
     # print info (this is vectorized environment)
     print(f"[INFO]: Gym observation space: {env.observation_space}")

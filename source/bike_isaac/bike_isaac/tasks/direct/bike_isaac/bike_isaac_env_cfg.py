@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-import importlib
+import importlib, math
 
 # bike_cfg_module = importlib.import_module(
 #     "/home/shin-linux/bike_isaac/source/bike_isaac/bike_isaac/bike_cfg"
@@ -22,6 +22,8 @@ from isaaclab.managers import SceneEntityCfg
 from isaaclab.utils.noise import GaussianNoiseCfg, NoiseModelWithAdditiveBiasCfg
 import isaaclab.envs.mdp as mdp
 
+roll_range = math.radians(3)  # ±10度の範囲でランダム化
+
 @configclass
 class EventCfg:
     """Configuration for randomization."""
@@ -31,7 +33,7 @@ class EventCfg:
         mode="reset", # "startup" から "reset" に変更
         params={
             "asset_cfg": SceneEntityCfg("robot", body_names="main_body"),
-            "mass_distribution_params": (0.8, 1.2),
+            "mass_distribution_params": (0.9, 1.1),
             "operation": "scale",
             "distribution": "uniform",
             "recompute_inertia": True,
@@ -44,8 +46,8 @@ class EventCfg:
         mode="reset", # "startup" から "reset" に変更
         params={
             "asset_cfg": SceneEntityCfg("robot", joint_names="back_tire_pitch"),
-            "stiffness_distribution_params": (0.8, 1.2),
-            "damping_distribution_params": (0.8, 1.2),
+            # "stiffness_distribution_params": (0.9, 1.1),
+            # "damping_distribution_params": (0.9, 1.1),
             "operation": "scale",
             "distribution": "uniform",
         },
@@ -57,19 +59,38 @@ class EventCfg:
         mode="reset", # "startup" から "reset" に変更
         params={
             "asset_cfg": SceneEntityCfg("robot", joint_names="back_tire_pitch"),
-            "armature_distribution_params": (0.8, 1.2),
-            # "friction_distribution_params": (0.8, 1.2),
-            # "dynamic_friction_distribution_params": (0.8, 1.2),
+            # "armature_distribution_params": (0.9, 1.1),
+            "friction_distribution_params": (0.8, 1.2),
+            # "dynamic_friction_distribution_params": (0.9, 1.1),
             "operation": "scale",
             "distribution": "uniform",
+        },
+    )
+    reset_root_pose = EventTerm(
+        func=mdp.reset_root_state_uniform,
+        mode="reset",
+        params={
+            "pose_range": {
+                "roll": (-roll_range, roll_range),
+            },
+            "velocity_range": {
+                "x": (0.0, 0.0),
+                "y": (0.0, 0.0),
+                "z": (0.0, 0.0),
+                "roll": (-0.0, 0.0),
+                "pitch": (-0.0, 0.0),
+                "yaw": (-0.0, 0.0),
+            },
         },
     )
 
 @configclass
 class BikeIsaacEnvCfg(DirectRLEnvCfg):
+    debug: bool = False
+
     # env
     decimation = 1      # rendering frequency with frame
-    episode_length_s = 5.0  # maximum episode length in seconds
+    episode_length_s = 30.0  # maximum episode length in seconds
     action_space = 1     # - spaces definition
     observation_space = 4  # - spaces definition
     state_space = 0     # 保持すべき内部状態の数
@@ -78,10 +99,9 @@ class BikeIsaacEnvCfg(DirectRLEnvCfg):
     sim: SimulationCfg = SimulationCfg(dt=1 / 100, render_interval=decimation)
 
     # robot(s)
-    # /World/envs/env_.*/Robot というプリムパスでは、
-    # シーンのすべてのコピーに Robot という名前のロボットが存在することを暗黙的に示しています。
+    # /World/envs/env_.*/bike_V3_mjcf というプリムパスでは、
+    # シーンのすべてのコピーに bike_V3_mjcf という名前のロボットが存在することを暗黙的に示しています。
     robot_cfg: ArticulationCfg = BIKE_CFG.replace(prim_path="/World/envs/env_.*/Robot")
-
     # scene
     scene: InteractiveSceneCfg = InteractiveSceneCfg(num_envs=2, env_spacing=4.0, replicate_physics=True)
 
@@ -98,7 +118,7 @@ class BikeIsaacEnvCfg(DirectRLEnvCfg):
     back_tire_dof_name = "back_tire_pitch"
 
     # - action scale. now don't use torque control, so this is not used
-    action_scale = 0.0  # [N]
+    # action_scale = 0.0  # [N]
 
     # - reward scales
         # reward
@@ -106,7 +126,7 @@ class BikeIsaacEnvCfg(DirectRLEnvCfg):
         # penalty
     rew_scale_roll_vel = -0.01
     rew_scale_stable = -0.005
-    rew_scale_terminated = -1.0
+    rew_scale_terminated = -5.0
 
     # - reset states/conditions
     initial_roll_angle_range = [-0.25, 0.25]  # roll angle sample range on reset [rad]

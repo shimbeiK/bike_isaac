@@ -21,7 +21,8 @@ current_dir = Path(__file__).resolve().parent
 
 BIKE_CFG = ArticulationCfg(
     spawn=sim_utils.UsdFileCfg(
-        usd_path="/home/shin-linux/bike_isaac/assets/bike_V3_mjcf/bike_V3_mjcf_revised.usd",
+        activate_contact_sensors=True,
+        usd_path="/home/shin-linux/bike_isaac/assets/bike_V3_mjcf/bike_V3_mjcf_readable.usda",
         rigid_props=sim_utils.RigidBodyPropertiesCfg(
             max_depenetration_velocity=5.0,
             enable_gyroscopic_forces=True,           # Important for accurate dynamics
@@ -30,6 +31,7 @@ BIKE_CFG = ArticulationCfg(
         ),
         articulation_props=sim_utils.ArticulationRootPropertiesCfg(
             enabled_self_collisions=False,
+            fix_root_link=False,
             solver_position_iteration_count=8,
             solver_velocity_iteration_count=1,
         ),
@@ -45,6 +47,7 @@ BIKE_CFG = ArticulationCfg(
             "fork_yaw": math.pi / 3,
             "back_tire_pitch": 0.0,},
     ),
+    
     actuators={
         # Body lift and torso actuators
         "fork_yaw": ImplicitActuatorCfg(
@@ -55,15 +58,27 @@ BIKE_CFG = ArticulationCfg(
             damping=200.0,
         ),
         # Head actuators
-        "back_tire_pitch": ImplicitActuatorCfg(
+        # "back_tire_pitch": ImplicitActuatorCfg(
+        #     joint_names_expr=["back_tire_pitch"],
+        #     # effort_limit_sim=50.0,
+        #     velocity_limit_sim=2.0,
+        #     stiffness=0.0,
+        #     damping=1.0,
+        #     # aramature=0.01,
+        #     # friction=0.1,
+        #     # dynamic_friction=0.1,
+        # ),
+        "back_tire_pitch":ImplicitActuatorCfg(
             joint_names_expr=["back_tire_pitch"],
-            # effort_limit_sim=50.0,
-            velocity_limit_sim=210.0,
-            stiffness=100.0,
-            damping=0.1,
-            # aramature=0.01,
-            # friction=0.1,
-            # dynamic_friction=0.1,
+            effort_limit_sim=100.0,
+            velocity_limit_sim=20.0,
+            stiffness=0.0,
+            damping=10.0,
+        ),
+        "front_tire_pitch": ImplicitActuatorCfg(
+            joint_names_expr=["front_tire_pitch"],  # 実際のジョイント名に置き換え
+            stiffness=0.0,
+            damping=1.0,   # 転がり抵抗程度のダンピングを与える
         ),
     },
     # soft_joint_pos_limit_factor=1.0,

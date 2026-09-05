@@ -1,0 +1,112 @@
+<?xml version="1.0"?>
+<robot name="bike_V3_urdf">
+
+  <!-- World link for floating base -->
+  <link name="world"/>
+
+  <joint name="floating_base" type="floating">
+    <parent link="world"/>
+    <child link="main_body"/>
+  </joint>
+
+  <!-- Main Body -->
+  <link name="main_body">
+    <inertial>
+      <origin xyz="-0.251337 -0.001123 0.310924" rpy="0 0 0"/>
+      <mass value="2.3123167"/>
+      <inertia ixx="0.06237483005" ixy="0" ixz="0" iyy="0.04698001994" iyz="0" izz="0.03020791479"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh filename="/home/shin-linux/bike_isaac/assets/assets/body.stl"/>
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="/home/shin-linux/bike_isaac/assets/assets/body.stl"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- Back Tire -->
+  <link name="back_tire">
+    <inertial>
+      <origin xyz="0 -0.004273 0" rpy="0 0 0"/>
+      <mass value="0.923928"/>
+      <inertia ixx="0.007352292526" ixy="0" ixz="0" iyy="0.01090125389" iyz="0" izz="0.007352292526"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh filename="/home/shin-linux/bike_isaac/assets/assets/back_tire.stl"/>
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="/home/shin-linux/bike_isaac/assets/assets/back_tire.stl"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="back_tire_pitch" type="continuous">
+    <parent link="main_body"/>
+    <child link="back_tire"/>
+    <origin xyz="0 0 0.15" rpy="0 0 0"/>
+    <axis xyz="0 -1 0"/>
+    <dynamics damping="5.0e-5" friction="0.27675"/>
+  </joint>
+
+  <!-- Fork -->
+  <link name="fork">
+    <inertial>
+      <origin xyz="0 0 -0.040874" rpy="0 0 0"/>
+      <mass value="0.482246"/>
+      <inertia ixx="0.004616" ixy="0" ixz="0" iyy="0.00451647025" iyz="0" izz="0.000100681436"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh filename="/home/shin-linux/bike_isaac/assets/assets/fork.stl"/>
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="/home/shin-linux/bike_isaac/assets/assets/fork.stl"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="fork_yaw" type="revolute">
+    <parent link="main_body"/>
+    <child link="fork"/>
+    <origin xyz="-0.492314 0 0.34492" rpy="0 0.20847 -0"/>
+    <axis xyz="0 0 -1"/>
+    <limit lower="-1.570796" upper="1.570796" effort="12.0" velocity="100.0"/>
+    <dynamics damping="0.0" friction="0.161745"/>
+  </joint>
+
+  <link name="front_tire">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.749780"/>
+      <inertia ixx="0.005349419022" ixy="0" ixz="0" iyy="0.008289292138" iyz="0" izz="0.005349419022"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh filename="/home/shin-linux/bike_isaac/assets/assets/front_tire.stl"/>
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="/home/shin-linux/bike_isaac/assets/assets/front_tire.stl"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="front_tire_pitch" type="continuous">
+    <parent link="fork"/>
+    <child link="front_tire"/>
+    <origin xyz="0 0 -0.212269" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <dynamics damping="1.0e-6"/>
+  </joint>
+
+</robot>

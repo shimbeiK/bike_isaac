@@ -1,9 +1,12 @@
+from isaacsim import SimulationApp
+# ヘッドレスモード（GUIなし）でIsaac Simをバックグラウンド起動し、パスを通す
+simulation_app = SimulationApp({"headless": True})
 from pxr import Usd
 import sys
 
-input_file = "bike_V3_mjcf.usd"
+input_file = "/home/shin-linux/bike_isaac/assets/bike_V3_mjcf/bike_V3_mjcf_revised.usd"
 # 拡張子を .usda (AはASCIIの略) にすることで、人間が読めるテキスト形式になります
-output_file = "bike_V3_mjcf_readable.usda"
+output_file = "/home/shin-linux/bike_isaac/assets/bike_V3_mjcf/bike_V3_mjcf_readable.usda"
 
 print(f"Reading {input_file}...")
 stage = Usd.Stage.Open(input_file)

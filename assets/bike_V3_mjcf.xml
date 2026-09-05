@@ -23,6 +23,7 @@
   <worldbody>
     
     <body name="main_body" pos=".0 .0 .0">
+      <!-- </freejoint name="root"/> -->
       <inertial pos="-251.337e-3 -1.123e-3 310.924e-3" mass="2.3123167" diaginertia="0.06237483005 0.04698001994 0.03020791479" />
       <!-- <geom class="visual" type="mesh" mesh="main_body"/> -->
       <!-- <geom type="box" size="0.15 0.05 0.1" pos="0 0 0.15" group="0" /> -->
