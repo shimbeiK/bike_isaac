@@ -87,11 +87,11 @@ class BikeIsaacEnv(DirectRLEnv):
             reset_terminated=reset_terminated,
         )
         self.extras["log"] = {
-            "Reward/termination": rew_termination.mean(),
-            "Reward/roll_angle": rew_roll_angle.mean(),
-            "Reward/roll_vel": rew_roll_vel.mean(),
-            "Reward/stable": rew_stable.mean(),
-            "Reward/total": total_reward.mean(),
+            "Reward/termination": rew_termination.median(),
+            "Reward/roll_angle": rew_roll_angle.median(),
+            "Reward/roll_vel": rew_roll_vel.median(),
+            "Reward/stable": rew_stable.median(),
+            "Reward/total": total_reward.median(),
         }
         return total_reward
 

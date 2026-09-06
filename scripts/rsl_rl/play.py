@@ -22,6 +22,7 @@ parser.add_argument("--video_length", type=int, default=200, help="Length of the
 parser.add_argument(
     "--disable_fabric", action="store_true", default=False, help="Disable fabric and use USD I/O operations."
 )
+parser.add_argument("--env_spacing", type=float, default=None, help="Number of spaces to simulate.")
 parser.add_argument("--num_envs", type=int, default=None, help="Number of environments to simulate.")
 parser.add_argument("--task", type=str, default=None, help="Name of the task.")
 parser.add_argument(
@@ -174,6 +175,7 @@ def debug_print_physics(env):
     print(f"Root linear velocity: {robot.data.root_lin_vel_w[0].detach().cpu().numpy()}")
     print(f"Root angular velocity: {robot.data.root_ang_vel_w[0].detach().cpu().numpy()}")
     print("\n[7] ENVIRONMENT INFORMATION")
+    print(f"Environment spacing : {env.unwrapped.env_spacing}")
     print(f"Number of envs      : {env.unwrapped.num_envs}")
     print(f"Environment device  : {env.unwrapped.device}")
     print("=" * 100)
@@ -187,6 +189,7 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
     train_task_name = task_name.replace("-Play", "")
     agent_cfg: RslRlBaseRunnerCfg = cli_args.update_rsl_rl_cfg(agent_cfg, args_cli)
     env_cfg.scene.num_envs = args_cli.num_envs if args_cli.num_envs is not None else env_cfg.scene.num_envs
+    env_cfg.scene.env_spacing = args_cli.env_spacing if args_cli.env_spacing is not None else env_cfg.scene.env_spacing
     env_cfg.seed = agent_cfg.seed
     env_cfg.sim.device = args_cli.device if args_cli.device is not None else env_cfg.sim.device
     log_root_path = os.path.join("logs", "rsl_rl", agent_cfg.experiment_name)

@@ -33,7 +33,7 @@ class EventCfg:
         mode="reset", # "startup" から "reset" に変更
         params={
             "asset_cfg": SceneEntityCfg("robot", body_names="main_body"),
-            "mass_distribution_params": (0.9, 1.1),
+            "mass_distribution_params": (0.8, 1.2),
             "operation": "scale",
             "distribution": "uniform",
             "recompute_inertia": True,
@@ -60,8 +60,7 @@ class EventCfg:
         params={
             "asset_cfg": SceneEntityCfg("robot", joint_names="back_tire_pitch"),
             # "armature_distribution_params": (0.9, 1.1),
-            "friction_distribution_params": (0.8, 1.2),
-            # "dynamic_friction_distribution_params": (0.9, 1.1),
+            "friction_distribution_params": (0.8, 1.2), # 静と動の摩擦係数のランダム化
             "operation": "scale",
             "distribution": "uniform",
         },
@@ -92,7 +91,7 @@ class BikeIsaacEnvCfg(DirectRLEnvCfg):
     decimation = 1      # rendering frequency with frame
     episode_length_s = 30.0  # maximum episode length in seconds
     action_space = 1     # - spaces definition
-    observation_space = 4  # - spaces definition
+    observation_space = 2  # - spaces definition
     state_space = 0     # 保持すべき内部状態の数
 
     # simulation. recommended is 1/120
@@ -103,7 +102,7 @@ class BikeIsaacEnvCfg(DirectRLEnvCfg):
     # シーンのすべてのコピーに bike_V3_mjcf という名前のロボットが存在することを暗黙的に示しています。
     robot_cfg: ArticulationCfg = BIKE_CFG.replace(prim_path="/World/envs/env_.*/Robot")
     # scene
-    scene: InteractiveSceneCfg = InteractiveSceneCfg(num_envs=2, env_spacing=4.0, replicate_physics=True)
+    scene: InteractiveSceneCfg = InteractiveSceneCfg(num_envs=2, env_spacing=2.0, replicate_physics=True)
 
     # events
     events: EventCfg = EventCfg()
@@ -125,7 +124,7 @@ class BikeIsaacEnvCfg(DirectRLEnvCfg):
     rew_scale_roll_angle = 1.0
         # penalty
     rew_scale_roll_vel = -0.01
-    rew_scale_stable = -0.005
+    rew_scale_stable = -0.00
     rew_scale_terminated = -5.0
 
     # - reset states/conditions
