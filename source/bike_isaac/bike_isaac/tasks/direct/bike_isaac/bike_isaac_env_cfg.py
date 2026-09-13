@@ -10,8 +10,8 @@ import importlib, math
 # )
 # BIKE_CFG = bike_cfg_module.BIKE_CFG
 
-from bike_isaac.bike_cfg import BIKE_CFG
-
+from bike_isaac.bike_cfg_gpt import BIKE_CFG
+import isaaclab.sim as sim_utils
 from isaaclab.assets import ArticulationCfg
 from isaaclab.envs import DirectRLEnvCfg
 from isaaclab.scene import InteractiveSceneCfg
@@ -22,7 +22,7 @@ from isaaclab.managers import SceneEntityCfg
 from isaaclab.utils.noise import GaussianNoiseCfg, NoiseModelWithAdditiveBiasCfg
 import isaaclab.envs.mdp as mdp
 
-roll_range = math.radians(3)  # ±10度の範囲でランダム化
+roll_range = math.radians(3)  # ±３度の範囲でランダム化
 
 @configclass
 class EventCfg:
@@ -40,31 +40,31 @@ class EventCfg:
         },
     )
 
-    # 2. アクチュエータパラメータ（PDゲイン）のランダム化（エピソードリセットごとに再抽選）
-    randomize_actuator_gains = EventTerm(
-        func=mdp.randomize_actuator_gains,
-        mode="reset", # "startup" から "reset" に変更
-        params={
-            "asset_cfg": SceneEntityCfg("robot", joint_names="back_tire_pitch"),
-            # "stiffness_distribution_params": (0.9, 1.1),
-            # "damping_distribution_params": (0.9, 1.1),
-            "operation": "scale",
-            "distribution": "uniform",
-        },
-    )
+    # # 2. アクチュエータパラメータ（PDゲイン）のランダム化（エピソードリセットごとに再抽選）
+    # randomize_actuator_gains = EventTerm(
+    #     func=mdp.randomize_actuator_gains,
+    #     mode="reset", # "startup" から "reset" に変更
+    #     params={
+    #         "asset_cfg": SceneEntityCfg("robot", joint_names="back_tire_pitch"),
+    #         # "stiffness_distribution_params": (0.9, 1.1),
+    #         # "damping_distribution_params": (0.9, 1.1),
+    #         "operation": "scale",
+    #         "distribution": "uniform",
+    #     },
+    # )
 
-    # 3. アクチュエータパラメータ（）のランダム化（エピソードリセットごとに再抽選）
-    randomize_joint_parameters = EventTerm(
-        func=mdp.randomize_joint_parameters,
-        mode="reset", # "startup" から "reset" に変更
-        params={
-            "asset_cfg": SceneEntityCfg("robot", joint_names="back_tire_pitch"),
-            # "armature_distribution_params": (0.9, 1.1),
-            "friction_distribution_params": (0.8, 1.2), # 静と動の摩擦係数のランダム化
-            "operation": "scale",
-            "distribution": "uniform",
-        },
-    )
+    # # 3. アクチュエータパラメータ（）のランダム化（エピソードリセットごとに再抽選）
+    # randomize_joint_parameters = EventTerm(
+    #     func=mdp.randomize_joint_parameters,
+    #     mode="reset", # "startup" から "reset" に変更
+    #     params={
+    #         "asset_cfg": SceneEntityCfg("robot", joint_names="back_tire_pitch"),
+    #         # "armature_distribution_params": (0.9, 1.1),
+    #         "friction_distribution_params": (0.8, 1.2), # 静と動の摩擦係数のランダム化
+    #         "operation": "scale",
+    #         "distribution": "uniform",
+    #     },
+    # )
     reset_root_pose = EventTerm(
         func=mdp.reset_root_state_uniform,
         mode="reset",
@@ -95,7 +95,15 @@ class BikeIsaacEnvCfg(DirectRLEnvCfg):
     state_space = 0     # 保持すべき内部状態の数
 
     # simulation. recommended is 1/120
-    sim: SimulationCfg = SimulationCfg(dt=1 / 100, render_interval=decimation)
+    sim: SimulationCfg = SimulationCfg(
+        dt=1 / 100, 
+        render_interval=decimation,
+        physics_material=sim_utils.RigidBodyMaterialCfg(
+        static_friction=0.8,
+        dynamic_friction=1.0,
+        restitution=0.0,
+        ),
+    )
 
     # robot(s)
     # /World/envs/env_.*/bike_V3_mjcf というプリムパスでは、
@@ -105,9 +113,9 @@ class BikeIsaacEnvCfg(DirectRLEnvCfg):
     scene: InteractiveSceneCfg = InteractiveSceneCfg(num_envs=2, env_spacing=2.0, replicate_physics=True)
 
     # events
-    events: EventCfg = EventCfg()
+    # events: EventCfg = EventCfg()
     action_noise_model: NoiseModelWithAdditiveBiasCfg = NoiseModelWithAdditiveBiasCfg(
-      noise_cfg=GaussianNoiseCfg(mean=0.0, std=0.05, operation="add"),
+      noise_cfg=GaussianNoiseCfg(mean=0.0, std=0.001, operation="add"),
       bias_noise_cfg=GaussianNoiseCfg(mean=0.0, std=0.0, operation="abs"),
     )
 

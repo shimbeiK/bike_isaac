@@ -14,14 +14,20 @@ from isaaclab.sim.spawners.from_files import GroundPlaneCfg, spawn_ground_plane
 from isaaclab.utils.math import sample_uniform, euler_xyz_from_quat
 from isaaclab.sensors import ImuCfg, Imu
 from .bike_isaac_env_cfg import BikeIsaacEnvCfg
+from pxr import UsdPhysics
 
 def debug_print(env, *args, **kwargs):
     if env.cfg.debug:
-        print(*args, **kwargs)
+        if not hasattr(env, "_debug_counter"):
+            env._debug_counter = 0
 
+        if env._debug_counter % 50 == 0:
+            print(*args, **kwargs)
+
+        env._debug_counter += 1
 class BikeIsaacEnv(DirectRLEnv):
     cfg: BikeIsaacEnvCfg
-    IMU_SITE_PATH = "/World/envs/env_.*/Robot/bike_V3_mjcf/main_body/main_body/sites/imu_site"
+    IMU_SITE_PATH="/World/envs/env_.*/Robot/imu_link"
 
     def __init__(self, cfg: BikeIsaacEnvCfg, render_mode: str | None = None, **kwargs):
         super().__init__(cfg, render_mode, **kwargs)
@@ -38,10 +44,19 @@ class BikeIsaacEnv(DirectRLEnv):
             prim_path=self.IMU_SITE_PATH,
             update_period=1 / 200,
             history_length=0.0,
-            debug_vis=True,
+            debug_vis=False,
         )
         self.imu = Imu(self.imu_cfg)
-        spawn_ground_plane(prim_path="/World/ground", cfg=GroundPlaneCfg())
+        spawn_ground_plane(prim_path="/World/ground", cfg=GroundPlaneCfg(        
+            physics_material=sim_utils.RigidBodyMaterialCfg(
+            static_friction=1.0,
+            dynamic_friction=0.8,
+            restitution=0.0,
+            friction_combine_mode="average",
+            restitution_combine_mode="average",
+                )
+            )
+        )
         self.scene.clone_environments(copy_from_source=False)
         if self.device == "cpu":
             self.scene.filter_collisions(global_prim_paths=[])
@@ -51,15 +66,20 @@ class BikeIsaacEnv(DirectRLEnv):
         light_cfg.func("/World/Light", light_cfg)
 
     def _pre_physics_step(self, actions: torch.Tensor) -> None:
+        debug_print(self, "RAW actions:", actions[:, 0])
         self.actions = actions.clone()
+        debug_print(self, "input action:", self.actions[:, 0])
 
     def _apply_action(self) -> None:
         target_angle = torch.full((self.num_envs, 1), math.pi / 3, device=self.device)
-        self.robot.set_joint_velocity_target(self.actions, joint_ids=self._back_tire_dof_idx)
+        actuator = self.robot.actuators["back_tire_pitch"]
+        velocity_limit = actuator.velocity_limit_sim[:, 0]
+        self.robot.set_joint_velocity_target(self.actions * velocity_limit.unsqueeze(-1), joint_ids=self._back_tire_dof_idx)
         self.robot.set_joint_position_target(target_angle, joint_ids=self._fork_dof_idx)
-        debug_print(self, "actual output:", self.actions[:, 0])
+        # debug_print(self, "actual output:", self.actions[:, 0])
         debug_print(self, "actual velocity:", self.robot.data.joint_vel[0, self._back_tire_dof_idx[0]])
-        debug_print(self, "applied torque:", self.robot.data.applied_torque[0, self._back_tire_dof_idx[0]])
+        debug_print(self, "")
+        # debug_print(self, "applied torque:", self.robot.data.applied_torque[0, self._back_tire_dof_idx[0]])
 
     def _get_observations(self) -> dict:
         compute_imu_data(self, self.scene["imu_site"].data)

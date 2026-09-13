@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 """
+look here https://isaac-sim.github.io/IsaacLab/v2.3.2/source/api/lab/isaaclab.sim.schemas.html#module-isaaclab.sim.schemas
 Configuration for the bike robots designed by hossyan and shimbei
 """
 
@@ -22,7 +23,8 @@ current_dir = Path(__file__).resolve().parent
 BIKE_CFG = ArticulationCfg(
     spawn=sim_utils.UsdFileCfg(
         activate_contact_sensors=True,
-        usd_path="/home/shin-linux/bike_isaac/assets/bike_V3_mjcf/bike_V3_mjcf_readable.usda",
+        # usd_path="/home/shin-linux/bike_isaac/assets/bike_v3/bike_v3_readable.usda",
+        usd_path="/home/shin-linux/bike_isaac/assets/bike_v3/bike_v3.usd",
         rigid_props=sim_utils.RigidBodyPropertiesCfg(
             max_depenetration_velocity=5.0,
             enable_gyroscopic_forces=True,           # Important for accurate dynamics

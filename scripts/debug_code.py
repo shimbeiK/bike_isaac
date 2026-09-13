@@ -29,7 +29,7 @@ def print_prim_details(prim):
     print("=" * 100)
 
 def main():
-    usd_path = "/home/shin-linux/bike_isaac/assets/bike_V3_mjcf/bike_V3_mjcf_readable.usda"
+    usd_path = "/home/shin-linux/bike_isaac/assets/bike_v3/bike_v3.usd"
     if not Path(usd_path).is_file():
         print(f"ERROR: USD file not found:")
         print(usd_path)
